@@ -1,4 +1,4 @@
-package com.project.LaptechBE.DTO.UserDTO;
+package com.project.LaptechBE.DTO.UserDTO.UserRequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterDTO {
-    private String username;
-    private String password;
+public class LoginRequest {
     private String email;
+    private String password;
 }
