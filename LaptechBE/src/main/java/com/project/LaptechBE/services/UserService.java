@@ -1,6 +1,7 @@
 package com.project.LaptechBE.services;
 
 import com.project.LaptechBE.DTO.ApiResponse;
+import com.project.LaptechBE.DTO.UserDTO.UserDTO;
 import com.project.LaptechBE.DTO.UserDTO.UserRequest.LoginRequest;
 import com.project.LaptechBE.DTO.UserDTO.UserRequest.RegisterRequest;
 import com.project.LaptechBE.DTO.UserDTO.UserResponse.LoginResponse;
@@ -8,13 +9,21 @@ import com.project.LaptechBE.enums.RoleEnum;
 import com.project.LaptechBE.models.User;
 import com.project.LaptechBE.repositories.UserRepository;
 import com.project.LaptechBE.services.IServices.IUserService;
+import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -91,7 +100,84 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public User UpdateUser(String id) {
-        return null;
+    public Object UpdateUser(ObjectId id, UserDTO userDTO) {
+        try{
+            Optional<User> checkUser = userRepository.findById(id);
+            if(checkUser.isEmpty()) {
+                return "The user is not defined";
+            }
+
+            // Lấy đối tượng User hiện tại từ Optional
+            User existingUser = checkUser.get();
+
+            // Cập nhật các trường được truyền trong userDTO
+            existingUser.setName(userDTO.getName());
+            existingUser.setAddresses(userDTO.getAddresses());
+            existingUser.setAvatar(userDTO.getAvatar());
+            existingUser.setEmail(userDTO.getEmail());
+            existingUser.setUpdatedAt(LocalDateTime.now());
+
+            // Lưu lại user đã cập nhật
+            userRepository.save(existingUser);
+
+
+            return userRepository.save(existingUser);
+        }
+        catch (Exception e){
+            System.out.println(e.toString() + "Error when update user");
+            return "Error when deleting user";
+        }
+    }
+
+    @Override
+    public Object DeleteUser(ObjectId id) {
+        try{
+            var checkUser = userRepository.findById(id);
+            if(checkUser.isEmpty()) {
+                return "The user is not defined";
+            }
+
+            userRepository.deleteById(id);
+            return checkUser;
+        } catch (Exception e) {
+            return "Error when deleting user";
+        }
+    }
+
+    @Override
+    public Object GetUserById(ObjectId id) {
+        try{
+            var user = userRepository.findById(id);
+            if(user.isEmpty()) {
+                return "The user is not defined";
+            }
+            return user;
+        } catch (Exception e) {
+            return "Error when getting details user";
+        }
+    }
+
+    @Override
+    public Object GetAllUsers() {
+        try{
+            var allUser = userRepository.findAll(Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("updatedAt")));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(ApiResponse.builder()
+                            .status("OK")
+                            .message("Success")
+                            .data(allUser)
+                            .build()
+                    )
+                    .build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(ApiResponse.builder()
+                            .status("ERR")
+                            .message("Error when getting all users")
+                            .build()
+                    )
+                    .build();
+        }
     }
 }

@@ -2,9 +2,12 @@ package com.project.LaptechBE.controllers;
 
 import com.mongodb.internal.bulk.UpdateRequest;
 import com.project.LaptechBE.DTO.ApiResponse;
+import com.project.LaptechBE.DTO.UserDTO.UserDTO;
 import com.project.LaptechBE.DTO.UserDTO.UserRequest.LoginRequest;
 import com.project.LaptechBE.DTO.UserDTO.UserRequest.RegisterRequest;
+import com.project.LaptechBE.DTO.UserDTO.UserRequest.UpdateUserRequest;
 import com.project.LaptechBE.DTO.UserDTO.UserResponse.LoginResponse;
+import com.project.LaptechBE.models.User;
 import com.project.LaptechBE.services.UserService;
 import com.project.LaptechBE.untils.EmailValidator;
 import com.project.LaptechBE.untils.Endpoints;
@@ -13,6 +16,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Path(Endpoints.User.BASE)
@@ -123,7 +128,8 @@ public class UserController {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity(ApiResponse.builder()
                                 .status("ERR")
-                                .message(result.toString()))
+                                .message(result.toString())
+                                .build())
                         .build();
             }
 
@@ -168,9 +174,66 @@ public class UserController {
                 .build();
     }
 
-    @PATCH
+    @PUT
     @Path(Endpoints.User.UPDATE)
-    public Response update(UpdateRequest updateRequest) {
+    public Response update(UserDTO userDTO) {
 
+        try {
+            ObjectId userid = null;
+            if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User user) {
+                userid = user.getId();
+            }
+
+            if(userid == null){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("The userId is required")
+                                        .build()
+                        )
+                        .build();
+            }
+
+            var result = userService.UpdateUser(userid, userDTO);
+
+            if(result == "The user is not defined"){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(ApiResponse.builder()
+                                .status("ERR")
+                                .message("The user is not defined")
+                                .build()
+                        )
+                        .build();
+            }
+
+            if(result == "Error when update user"){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(ApiResponse.builder()
+                                .status("ERR")
+                                .message("Error when update user")
+                                .build()
+                        )
+                        .build();
+            }
+
+            return Response.status(Response.Status.OK)
+                    .entity(ApiResponse.builder()
+                                    .status("OK")
+                                    .message("Success")
+                                    .data(result)
+                                    .build()
+                    )
+                    .build();
+        }catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(ApiResponse.builder()
+                            .message(e.toString())
+                            .build()
+                    )
+                    .build();
+        }
     }
+
+
 }

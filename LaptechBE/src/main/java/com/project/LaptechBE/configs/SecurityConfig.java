@@ -22,7 +22,9 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(request -> {
                     request.requestMatchers(
-                            "/api/user/**"
+                            "/api/user/register",
+                            "/api/user/login",
+                            "/api/**"
                     ).permitAll().anyRequest().authenticated();
                 });
         return http.build();

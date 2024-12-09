@@ -52,7 +52,7 @@ public class RefreshTokenService {
     public String generateRefreshToken(UserDetails userDetails) {
         Map<String,Object> extraClaims = new HashMap<>();
         if(userDetails instanceof User user) {
-            extraClaims.put("id",user.get_id());
+            extraClaims.put("id",user.getId());
             extraClaims.put("isAdmin",user.getIsAdmin());
         }
 

@@ -1,11 +1,18 @@
 package com.project.LaptechBE.services.IServices;
 
+import com.project.LaptechBE.DTO.UserDTO.UserDTO;
 import com.project.LaptechBE.DTO.UserDTO.UserRequest.LoginRequest;
 import com.project.LaptechBE.DTO.UserDTO.UserRequest.RegisterRequest;
 import com.project.LaptechBE.models.User;
+import org.bson.types.ObjectId;
+
+import java.util.Map;
 
 public interface IUserService {
     public Object RegisterUser(RegisterRequest registerRequest);
     public Object LoginUser(LoginRequest loginRequest);
-    public Object UpdateUser(String id);
+    public Object UpdateUser(ObjectId id, UserDTO userdto);
+    public Object DeleteUser(ObjectId id);
+    public Object GetUserById(ObjectId id);
+    public Object GetAllUsers();
 }

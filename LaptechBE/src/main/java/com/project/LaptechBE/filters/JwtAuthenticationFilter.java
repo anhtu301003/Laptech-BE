@@ -1,13 +1,15 @@
 package com.project.LaptechBE.filters;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.LaptechBE.DTO.ApiResponse;
 import com.project.LaptechBE.services.AccessTokenService;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -36,14 +38,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         jwt = authHeader.substring(7);
-        userName = accessTokenService.extractAccessTokenUserName(jwt);
-        if(userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userName);
-            if(accessTokenService.isAccessTokenValid(jwt, userDetails)) {
+
+        try {
+            userName = accessTokenService.extractAccessTokenUserName(jwt);
+            if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userName);
+                accessTokenService.isAccessTokenValid(jwt, userDetails);  // Kiểm tra tính hợp lệ của token
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
+        } catch (SignatureException e) {
+            // Nếu có ngoại lệ (token không hợp lệ hoặc hết hạn), trả về lỗi 401
+            response.setContentType("application/json");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            // Tạo ApiResponse và chuyển nó thành JSON
+            ApiResponse apiResponse =  ApiResponse.builder()
+                    .status("ERR")
+                    .message(e.toString())
+                    .build();
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonResponse = objectMapper.writeValueAsString(apiResponse);
+
+            // Ghi vào response body
+            response.getWriter().write(jsonResponse);
+            return;  // Ngừng xử lý filter
         }
         filterChain.doFilter(request, response);
     }
