@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.project.LaptechBE.untils.ProductValidate.validateObjectId;
 import static com.project.LaptechBE.untils.ProductValidate.validateProductInput;
 
 @Path(Endpoints.Product.BASE)
@@ -93,7 +94,6 @@ public class ProductController {
 //    }
 //
     @GET
-    @Path(Endpoints.Product.GETPRODUCTS)
     public Response getProducts(
             @QueryParam("category") String category,
             @QueryParam("subCategory") String subCategory,
@@ -102,28 +102,59 @@ public class ProductController {
             @QueryParam("minPrice") Double minPrice,
             @QueryParam("maxPrice") Double maxPrice,
             @QueryParam("search") String search,
-            @QueryParam("sort") String sort,
+            @QueryParam("sort") Integer sort,
             @QueryParam("page") @DefaultValue("1") int page,
             @QueryParam("limit") @DefaultValue("10") int limit
     ) {
-        // 1. Xây dựng filters từ query parameters
-        Map<String, Object> filters = new HashMap<>();
-        if (category != null) filters.put("category", category);
-        if (subCategory != null) filters.put("subCategory", subCategory);
-        if (brand != null) filters.put("brand", brand);
+        try{
+            // 1. Xây dựng filters từ query parameters
+            Map<String, Object> filters = new HashMap<>();
+            if (category != null && !category.isEmpty()) filters.put("category", category);
+            if (subCategory != null && !subCategory.isEmpty()) filters.put("subCategory", subCategory);
+            if (brand != null && !brand.isEmpty()) filters.put("brand", brand);
 
-        if (minPrice != null || maxPrice != null) {
-            Map<String, Double> priceFilter = new HashMap<>();
-            if (minPrice != null) priceFilter.put("$gte", minPrice);
-            if (maxPrice != null) priceFilter.put("$lte", maxPrice);
-            filters.put("price", priceFilter);
+            if (minPrice != null || maxPrice != null) {
+                Map<String, Double> priceFilter = new HashMap<>();
+                if (minPrice != null) priceFilter.put("$gte", minPrice);
+                if (maxPrice != null) priceFilter.put("$lte", maxPrice);
+                filters.put("price", priceFilter);
+            }
+
+            if (search != null && !brand.isEmpty()) filters.put("search", search);
+            if (sort != null) filters.put("sort", sort);
+            if (isFeatured != null) filters.put("isFeatured", isFeatured);
+
+            var result = productService.getProducts(filters,page,limit);
+            int count = ((Long) result.get("count")).intValue();
+            Integer totalPages = 0;
+            if(result.get("totalPages") == null && count>0){
+                if(count<10 && count>0){
+                    totalPages = 1;
+                }
+                else{
+                    totalPages = (Integer)result.get("totalPages");
+                }
+            }
+            return Response.status(Response.Status.OK)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("OK")
+                                    .data(result.get("data"))
+                                    .count(count)
+                                    .totalPages(totalPages)
+                                    .build()
+                    )
+                    .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("ERR")
+                                    .message("Failed to fetch products")
+                                    .details(e.getMessage()).build()
+                    )
+                    .build();
         }
-
-        if (search != null) filters.put("search", search);
-        if (sort != null) filters.put("sort", sort);
-        if (isFeatured != null) filters.put("isFeatured", isFeatured);
-
-        var result = productService.getProducts(filters,page,limit);
     }
 //
 //    @GET
@@ -132,11 +163,52 @@ public class ProductController {
 //
 //    }
 //
-//    @GET
-//    @Path(Endpoints.Product.GETPRODUCTBYID+"{id}")
-//    public Response getProductById(@PathParam("id") String id) {
-//
-//    }
+    @GET
+    @Path(Endpoints.Product.GETPRODUCTBYID+"{id}")
+    public Response getProductById(@PathParam("id") String id) {
+        try{
+            if(validateObjectId(id)){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("Invalid product ID format").build()
+                        ).build();
+            }
+
+            var result = productService.getProductById(id);
+
+            if(result instanceof String ){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message((String) result)
+                                        .build()
+                        )
+                        .build();
+            }
+
+            return Response.status(Response.Status.OK)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("OK")
+                                    .data(result)
+                                    .build()
+                    )
+                    .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("ERR")
+                                    .message("Failed to fetch product")
+                                    .details(e.toString())
+                                    .build()
+                    )
+                    .build();
+        }
+    }
 //
 //    @PUT
 //    @Path(Endpoints.Product.UPDATEPRODUCT+"{id}")

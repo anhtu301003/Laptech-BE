@@ -1,5 +1,8 @@
 package com.project.LaptechBE.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.project.LaptechBE.enums.RoleEnum;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -34,6 +37,8 @@ import java.util.List;
 public class User implements UserDetails {
     @Id
     @Field("_id")
+    @JsonProperty("_id")  // Giữ tên trường là _id trong JSON trả về
+    @JsonSerialize(using = ToStringSerializer.class)  // Chuyển ObjectId thành chuỗi khi trả về
     private ObjectId id;
 
     @NotBlank

@@ -8,4 +8,6 @@ public interface IProductService {
     public Object createProduct(ProductDTO productDTO);
 
     public Object getProducts(Map<String, Object> filters, int page, int limit);
+
+    public Object getProductById(String id);
 }

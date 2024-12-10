@@ -1,5 +1,8 @@
 package com.project.LaptechBE.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.project.LaptechBE.Annotation.ValidSubCategory;
 import com.project.LaptechBE.enums.CategoryEnum;
 import com.project.LaptechBE.enums.SubCategoryEnum;
@@ -8,7 +11,9 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -28,6 +33,8 @@ import java.util.List;
 public class Product {
     @Id
     @Field("_id")
+    @JsonProperty("_id")  // Giữ tên trường là _id trong JSON trả về
+    @JsonSerialize(using = ToStringSerializer.class)  // Chuyển ObjectId thành chuỗi khi trả về
     private ObjectId id;
 
     @Indexed
@@ -76,6 +83,11 @@ public class Product {
     @Builder.Default
     private Boolean isFeatured = Boolean.FALSE;
 
+    @CreatedDate
+    private LocalDateTime createdAt;
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
+
     @Builder
     @Data
     @AllArgsConstructor
@@ -83,6 +95,8 @@ public class Product {
     public static class Color {
         @Id
         @Field("_id")
+        @JsonProperty("_id")  // Giữ tên trường là _id trong JSON trả về
+        @JsonSerialize(using = ToStringSerializer.class)  // Chuyển ObjectId thành chuỗi khi trả về
         private ObjectId id;
 
         @NotBlank
@@ -99,6 +113,8 @@ public class Product {
     public static class Specification {
         @Id
         @Field("_id")
+        @JsonProperty("_id")  // Giữ tên trường là _id trong JSON trả về
+        @JsonSerialize(using = ToStringSerializer.class)  // Chuyển ObjectId thành chuỗi khi trả về
         private ObjectId id;
 
         @NotBlank
@@ -118,6 +134,8 @@ public class Product {
     public static class Review {
         @Id
         @Field("_id")
+        @JsonProperty("_id")  // Giữ tên trường là _id trong JSON trả về
+        @JsonSerialize(using = ToStringSerializer.class)  // Chuyển ObjectId thành chuỗi khi trả về
         private ObjectId id;
 
         @DBRef
