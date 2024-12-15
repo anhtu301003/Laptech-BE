@@ -5,7 +5,6 @@ import com.project.LaptechBE.DTO.UserDTO.UserDTO;
 import com.project.LaptechBE.DTO.UserDTO.UserRequest.LoginRequest;
 import com.project.LaptechBE.DTO.UserDTO.UserRequest.RegisterRequest;
 import com.project.LaptechBE.DTO.UserDTO.UserResponse.LoginResponse;
-import com.project.LaptechBE.enums.RoleEnum;
 import com.project.LaptechBE.models.User;
 import com.project.LaptechBE.repositories.UserRepository;
 import com.project.LaptechBE.services.IServices.IUserService;
@@ -13,16 +12,12 @@ import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -130,7 +125,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Object DeleteUser(ObjectId id) {
+    public Object DeleteUser(String id) {
         try{
             var checkUser = userRepository.findById(id);
             if(checkUser.isEmpty()) {
@@ -145,7 +140,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Object GetUserById(ObjectId id) {
+    public Object GetDetailsUser(String id) {
         try{
             var user = userRepository.findById(id);
             if(user.isEmpty()) {

@@ -10,9 +10,14 @@ import java.util.Map;
 
 public interface IUserService {
     public Object RegisterUser(RegisterRequest registerRequest);
+
     public Object LoginUser(LoginRequest loginRequest);
+
     public Object UpdateUser(ObjectId id, UserDTO userdto);
-    public Object DeleteUser(ObjectId id);
-    public Object GetUserById(ObjectId id);
+
+    public Object DeleteUser(String id);
+
+    public Object GetDetailsUser(String id);
+
     public Object GetAllUsers();
 }

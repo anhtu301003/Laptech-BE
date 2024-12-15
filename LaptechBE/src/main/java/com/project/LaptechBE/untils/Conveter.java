@@ -4,6 +4,7 @@ import com.project.LaptechBE.DTO.ProductDTO.ProductDTO;
 import com.project.LaptechBE.models.Product;
 import org.bson.types.ObjectId;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,7 @@ public class Conveter {
     }
 
     public static List<Product.Review> convertToProductReviewList(List<ProductDTO.Review> dtoReviews) {
+        if(dtoReviews == null) return new ArrayList<>();
         return dtoReviews.stream()
                 .map(dtoReview -> Product.Review.builder()
                         .comment(dtoReview.getComment())

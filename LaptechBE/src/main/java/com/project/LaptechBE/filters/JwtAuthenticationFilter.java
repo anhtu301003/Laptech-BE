@@ -47,6 +47,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                System.out.println(authToken);
+                System.out.println(SecurityContextHolder.getContext().getAuthentication());
             }
         } catch (SignatureException e) {
             // Nếu có ngoại lệ (token không hợp lệ hoặc hết hạn), trả về lỗi 401

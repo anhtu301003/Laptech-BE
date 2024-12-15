@@ -1,5 +1,6 @@
 package com.project.LaptechBE.DTO.ProductDTO;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.project.LaptechBE.enums.TypeEnum;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductDTO {
     private String name;
     private String description;

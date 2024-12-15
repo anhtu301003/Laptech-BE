@@ -8,6 +8,7 @@ import com.project.LaptechBE.DTO.UserDTO.UserRequest.RegisterRequest;
 import com.project.LaptechBE.DTO.UserDTO.UserRequest.UpdateUserRequest;
 import com.project.LaptechBE.DTO.UserDTO.UserResponse.LoginResponse;
 import com.project.LaptechBE.models.User;
+import com.project.LaptechBE.services.RefreshTokenService;
 import com.project.LaptechBE.services.UserService;
 import com.project.LaptechBE.untils.EmailValidator;
 import com.project.LaptechBE.untils.Endpoints;
@@ -28,6 +29,8 @@ import org.springframework.stereotype.Component;
 public class UserController {
 
     private final UserService userService;
+
+    private final RefreshTokenService refreshTokenService;
 
     @POST
     @Path(Endpoints.User.REGISTER)
@@ -235,5 +238,163 @@ public class UserController {
         }
     }
 
+    @DELETE
+    @Path("/{id}")
+    public Response delete(@PathParam("id") String id) {
+        try{
+            if(id.isBlank()){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("The userId is required")
+                        )
+                        .build();
+            }
 
+            var result = userService.DeleteUser(id);
+
+            if(result == "The user is not defined"){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("The user is not defined")
+                                        .build()
+                        )
+                        .build();
+            }
+
+            if(result == "Error when delete user"){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("Error when delete user")
+                                        .build()
+                        )
+                        .build();
+            }
+
+            return Response.status(Response.Status.OK)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("OK")
+                                    .message("SUCCESS")
+                                    .data(result)
+                                    .build()
+                    )
+                    .build();
+        }catch (Exception e){
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(
+                            ApiResponse.builder()
+                                    .message(e.getMessage())
+                                    .build()
+                    )
+                    .build();
+        }
+
+    }
+
+    @GET
+    @Path("/")
+    public Response getUsers() {
+        return null;
+    }
+
+    @GET
+    @Path("/{id}")
+    public Response getDetailsUser(@PathParam("id") String id) {
+        try{
+            if(id.isBlank()){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("The userId is required")
+                                        .build()
+                        )
+                        .build();
+
+            }
+
+            var result = userService.GetDetailsUser(id);
+
+            if(result == "The user is not defined"){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("The user is not defined")
+                                        .build()
+                        )
+                        .build();
+            }
+
+            if(result == "Error when get user details"){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("Error when get user details")
+                                        .build()
+                        )
+                        .build();
+            }
+
+            return Response.status(Response.Status.OK)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("OK")
+                                    .message("SUCCESS")
+                                    .data(result)
+                                    .build()
+                    )
+                    .build();
+        }catch (Exception e){
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(
+                            ApiResponse.builder()
+                                    .message(e.getMessage())
+                                    .build()
+                    )
+                    .build();
+        }
+    }
+
+
+    @POST
+    @Path(Endpoints.User.REFRESHTOKEN)
+    public Response refreshToken(@CookieParam("refresh_token") String refreshToken) {
+        try{
+            if(refreshToken == null || refreshToken.isEmpty()){
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("The token is required")
+                                        .build()
+                        )
+                        .build();
+            }
+
+            var result = refreshTokenService.refreshAccessToken(refreshToken);
+
+            return Response.status(Response.Status.OK)
+                    .entity(
+                            ApiResponse.builder()
+                                    .data(result)
+                                    .build()
+                    ).build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(
+                            ApiResponse.builder()
+                                    .message(e.getMessage())
+                                    .build()
+                    ).build();
+        }
+    }
 }

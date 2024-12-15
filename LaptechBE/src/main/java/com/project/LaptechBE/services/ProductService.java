@@ -45,8 +45,8 @@ public class ProductService implements IProductService {
             Product product = Product.builder()
                     .name(productDTO.getName())
                     .description(productDTO.getDescription())
-                    .category(CategoryEnum.fromString((productDTO.getCategory()).toUpperCase()))
-                    .subCategory(SubCategoryEnum.fromString((productDTO.getSubCategory()).toUpperCase()))
+                    .category(CategoryEnum.fromString(productDTO.getCategory()))
+                    .subCategory(SubCategoryEnum.fromString(productDTO.getSubCategory()))//error
                     .brand(productDTO.getBrand())
                     .price(productDTO.getPrice())
                     .stock(productDTO.getStock())

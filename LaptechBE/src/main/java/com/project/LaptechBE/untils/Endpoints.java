@@ -8,7 +8,7 @@ public class Endpoints {
         public static final String REGISTER = "/register";
         public static final String LOGIN = "/login";
         public static final String UPDATE = "/";
-        public static final String LOG_OUT = "/logout";
+        public static final String REFRESHTOKEN = "/refresh-token";
     }
 
     public static final class Order{

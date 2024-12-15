@@ -1,5 +1,8 @@
 package com.project.LaptechBE.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum SubCategoryEnum {
     GAMING("gaming"),
     OFFICE("office"),
@@ -16,11 +19,13 @@ public enum SubCategoryEnum {
         this.value = value;
     }
 
+    @JsonValue
     public String getValue() {
         return value;
     }
 
     // Phương thức để lấy enum từ chuỗi
+    @JsonCreator
     public static SubCategoryEnum fromString(String value) {
         for (SubCategoryEnum subCategory : SubCategoryEnum.values()) {
             if (subCategory.getValue().equalsIgnoreCase(value)) {
