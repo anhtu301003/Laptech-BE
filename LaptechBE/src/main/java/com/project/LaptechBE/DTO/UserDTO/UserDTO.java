@@ -1,6 +1,6 @@
 package com.project.LaptechBE.DTO.UserDTO;
 
-import com.project.LaptechBE.models.Address;
+import com.project.LaptechBE.models.submodels.submodelsUser.UserAddress;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -26,5 +26,5 @@ public class UserDTO {
     private String password;
     private String avatar;
     private String phone;
-    private ArrayList<Address> addresses = new ArrayList<>();
+    private ArrayList<UserAddress> addresses = new ArrayList<>();
 }

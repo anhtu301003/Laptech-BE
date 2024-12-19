@@ -17,7 +17,7 @@ public class SubCategoryValidator implements ConstraintValidator<ValidSubCategor
         if(product.getCategory() == null){
             return true;
         }
-        if(product.getCategory().equals(CategoryEnum.LAPTOP) && product.getSubCategory() == null){
+        if(product.getCategory().equals(CategoryEnum.laptop) && product.getSubCategory() == null){
             return false;
         }
 

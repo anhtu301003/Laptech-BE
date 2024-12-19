@@ -7,6 +7,9 @@ import com.project.LaptechBE.Annotation.ValidSubCategory;
 import com.project.LaptechBE.enums.CategoryEnum;
 import com.project.LaptechBE.enums.SubCategoryEnum;
 import com.project.LaptechBE.enums.TypeEnum;
+import com.project.LaptechBE.models.submodels.submodelsProduct.ProductColor;
+import com.project.LaptechBE.models.submodels.submodelsProduct.ProductReview;
+import com.project.LaptechBE.models.submodels.submodelsProduct.ProductSpecification;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.bson.types.ObjectId;
@@ -14,6 +17,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -30,6 +35,9 @@ import java.util.List;
 @Document(collection = "products")
 @Validated
 @ValidSubCategory
+@CompoundIndexes({
+        @CompoundIndex(name = "name_text_brand_text_category_text", def = "{'userId': 'text', 'brand': 'text', 'category': 'text'}")
+})
 public class Product {
     @Id
     @Field("_id")
@@ -37,20 +45,17 @@ public class Product {
     @JsonSerialize(using = ToStringSerializer.class)  // Chuyển ObjectId thành chuỗi khi trả về
     private ObjectId id;
 
-    @Indexed
     @NotBlank
     private String name;
 
     @NotBlank
     private String description;
 
-    @Indexed
     @NotBlank
     private CategoryEnum category;
 
     private SubCategoryEnum subCategory;
 
-    @Indexed
     @NotBlank
     private String brand;
 
@@ -68,14 +73,14 @@ public class Product {
     @NotBlank
     private List<String> images;
 
-    private List<Color> colors;
+    private List<ProductColor> colors;
 
-    private List<Specification> specifications;
+    private List<ProductSpecification> specifications;
 
     @Builder.Default
     private String gift_value = "";
 
-    private List<Review> reviews;
+    private List<ProductReview> reviews;
 
     @Builder.Default
     private Number averageRating = 0;
@@ -89,64 +94,4 @@ public class Product {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @Builder
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class Color {
-        @Id
-        @Field("_id")
-        @JsonProperty("_id")  // Giữ tên trường là _id trong JSON trả về
-        @JsonSerialize(using = ToStringSerializer.class)  // Chuyển ObjectId thành chuỗi khi trả về
-        private ObjectId id;
-
-        @NotBlank
-        private String title;
-
-        @NotBlank
-        private String hex;
-    }
-
-    @Builder
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class Specification {
-        @Id
-        @Field("_id")
-        @JsonProperty("_id")  // Giữ tên trường là _id trong JSON trả về
-        @JsonSerialize(using = ToStringSerializer.class)  // Chuyển ObjectId thành chuỗi khi trả về
-        private ObjectId id;
-
-        @NotBlank
-        private TypeEnum type;
-
-        @NotBlank
-        private String title;
-
-        @NotBlank
-        private String description;
-    }
-
-    @Builder
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class Review {
-        @Id
-        @Field("_id")
-        @JsonProperty("_id")  // Giữ tên trường là _id trong JSON trả về
-        @JsonSerialize(using = ToStringSerializer.class)  // Chuyển ObjectId thành chuỗi khi trả về
-        private ObjectId id;
-
-        @DBRef
-        private User userId;
-
-        private Number rating;
-
-        private String comment;
-
-        @Builder.Default
-        private LocalDateTime createdAt = LocalDateTime.now();
-    }
 }

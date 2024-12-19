@@ -1,4 +1,4 @@
-package com.project.LaptechBE.models;
+package com.project.LaptechBE.models.submodels.submodelsUser;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Address {
+public class UserAddress {
     private String street;
     private String city;
     private String state;

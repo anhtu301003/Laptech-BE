@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.project.LaptechBE.enums.RoleEnum;
+import com.project.LaptechBE.models.submodels.submodelsUser.UserAddress;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -11,7 +12,6 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.index.IndexOptions;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -20,7 +20,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,7 +47,7 @@ public class User implements UserDetails {
 
     @NotBlank
     @Email
-    @Indexed(unique = true)
+    @Indexed(name = "email_1", unique = true)
     private String email;
     @NotBlank
     private String password;
@@ -59,7 +58,7 @@ public class User implements UserDetails {
     private Boolean isAdmin = false;
 
     @Builder.Default
-    private ArrayList<Address> addresses = new ArrayList<>();
+    private ArrayList<UserAddress> addresses = new ArrayList<>();
 
     @CreatedDate
     private LocalDateTime createdAt;

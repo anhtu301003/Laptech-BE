@@ -4,11 +4,15 @@ import com.project.LaptechBE.DTO.ProductDTO.ProductDTO;
 import com.project.LaptechBE.enums.CategoryEnum;
 import com.project.LaptechBE.enums.SubCategoryEnum;
 import com.project.LaptechBE.models.Product;
+import com.project.LaptechBE.models.submodels.submodelsProduct.ProductColor;
+import com.project.LaptechBE.models.submodels.submodelsProduct.ProductReview;
+import com.project.LaptechBE.models.submodels.submodelsProduct.ProductSpecification;
 import com.project.LaptechBE.repositories.ProductRepository;
 import com.project.LaptechBE.services.IServices.IProductService;
 import com.project.LaptechBE.untils.Conveter;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -16,9 +20,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.awt.print.Pageable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,18 +48,44 @@ public class ProductService implements IProductService {
             Product product = Product.builder()
                     .name(productDTO.getName())
                     .description(productDTO.getDescription())
-                    .category(CategoryEnum.fromString(productDTO.getCategory()))
-                    .subCategory(SubCategoryEnum.fromString(productDTO.getSubCategory()))//error
+                    .category(CategoryEnum.valueOf(productDTO.getCategory()))
+                    .subCategory(productDTO.getCategory() == "laptop" ? SubCategoryEnum.valueOf(productDTO.getSubCategory()) : null)
                     .brand(productDTO.getBrand())
                     .price(productDTO.getPrice())
                     .stock(productDTO.getStock())
-                    .sale_percentage(productDTO.getSale_percentage())
                     .starting_price(productDTO.getStarting_price())
                     .images(productDTO.getImages())
-                    .colors(Conveter.convertToProductColorList(productDTO.getColors()))
-                    .specifications(Conveter.convertToProductSpecificationList(productDTO.getSpecifications()))
+                    .colors(
+                            Objects.isNull(productDTO.getColors()) ? new ArrayList<>() : productDTO.getColors().stream()
+                                    .map(color -> ProductColor.builder()
+                                            .id(new ObjectId())
+                                            .hex(color.getHex())
+                                            .title(color.getTitle())
+                                            .build()
+                                    ).collect(Collectors.toList())
+                    )
+                    .specifications(
+                            Objects.isNull(productDTO.getSpecifications()) ? new ArrayList<>() : productDTO.getSpecifications().stream()
+                                    .map(
+                                            specification -> ProductSpecification.builder()
+                                                    .id(new ObjectId())
+                                                    .type(specification.getType())
+                                                    .title(specification.getTitle())
+                                                    .description(specification.getDescription())
+                                                    .build()
+                                    ).collect(Collectors.toList())
+                    )
                     .gift_value(productDTO.getGift_value())
-                    .reviews(Conveter.convertToProductReviewList(productDTO.getReviews()))
+                    .reviews(
+                            Objects.isNull(productDTO.getReviews()) ? new ArrayList<>() : productDTO.getReviews().stream()
+                                    .map(
+                                            review -> ProductReview.builder()
+                                                    .id(new ObjectId())
+                                                    .rating(review.getRating())
+                                                    .comment(review.getComment())
+                                                    .build()
+                                    ).collect(Collectors.toList())
+                    )
                     .build();
 
             return productRepository.save(product);
