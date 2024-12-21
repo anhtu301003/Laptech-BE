@@ -31,7 +31,8 @@ public class SecurityConfig {
                     request.requestMatchers(
                             "/api/user/register",
                             "/api/user/login",
-                            "/api/product/**"
+                            "/api/product/**",
+                            "/api/order/**"
                     ).permitAll().anyRequest().authenticated();
                 })
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()));

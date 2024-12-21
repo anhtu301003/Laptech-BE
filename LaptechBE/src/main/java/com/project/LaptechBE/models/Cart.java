@@ -63,4 +63,11 @@ public class Cart {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    public void calculateTotalPrice(){
+        this.totalPrice = products.stream().mapToInt(
+                item -> item.getPrice().intValue() * item.getQuantity().intValue()
+        ).sum();
+    }
+
+
 }

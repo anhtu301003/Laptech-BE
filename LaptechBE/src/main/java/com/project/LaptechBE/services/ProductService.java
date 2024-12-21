@@ -49,7 +49,7 @@ public class ProductService implements IProductService {
                     .name(productDTO.getName())
                     .description(productDTO.getDescription())
                     .category(CategoryEnum.valueOf(productDTO.getCategory()))
-                    .subCategory(productDTO.getCategory() == "laptop" ? SubCategoryEnum.valueOf(productDTO.getSubCategory()) : null)
+                    .subCategory(Objects.equals(productDTO.getCategory(),"laptop") ? SubCategoryEnum.fromString(productDTO.getSubCategory()) : null)
                     .brand(productDTO.getBrand())
                     .price(productDTO.getPrice())
                     .stock(productDTO.getStock())
