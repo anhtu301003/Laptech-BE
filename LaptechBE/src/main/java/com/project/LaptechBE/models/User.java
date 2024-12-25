@@ -52,7 +52,8 @@ public class User implements UserDetails {
     @NotBlank
     private String password;
     private String avatar;
-    private String phone;
+    @Builder.Default
+    private String phone = null;
 
     @Builder.Default
     private Boolean isAdmin = false;

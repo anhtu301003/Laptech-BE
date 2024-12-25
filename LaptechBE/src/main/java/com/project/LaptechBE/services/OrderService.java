@@ -7,7 +7,9 @@ import com.project.LaptechBE.enums.StatusOrderEnum;
 import com.project.LaptechBE.models.Cart;
 import com.project.LaptechBE.models.Order;
 import com.project.LaptechBE.models.Product;
+import com.project.LaptechBE.models.User;
 import com.project.LaptechBE.models.submodels.submodelsOrder.OrderItem;
+import com.project.LaptechBE.models.submodels.submodelsOrder.StatusHistory;
 import com.project.LaptechBE.repositories.CartRepository;
 import com.project.LaptechBE.repositories.OrderRepository;
 import com.project.LaptechBE.repositories.ProductRepository;
@@ -18,10 +20,16 @@ import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -91,7 +99,7 @@ public class OrderService implements IOrderService {
                     .userId(user.get())
                     .shippingAddress(orderDTO.getShippingAddress())
                     .paymentMethod(PaymentMethodEnum.valueOf(orderDTO.getPaymentMethod()))
-                    .notes(orderDTO.getNotes())
+                    .notes(Objects.isNull(orderDTO.getNotes())  ? "" : orderDTO.getNotes())
                     .items(
                             items.stream().map(
                                     item -> OrderItem.builder()
@@ -104,6 +112,7 @@ public class OrderService implements IOrderService {
                                             .build()
                             ).collect(Collectors.toList())
                     )
+                    .statusHistory(new ArrayList<>())
                     .couponCode(orderDTO.getCouponCode())
                     .subtotal(subtotal)
                     .total(total)
@@ -123,34 +132,38 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public Object getUserOrders(String userId, Map<String, Object> filter){
-//        try{
-//                // Tạo Pageable để phân trang
-//                Pageable pageable = PageRequest.of((int)filter.get("page") - 1, (int)filter.get("limit"));
-//                Page<Order> ordersPage;
-//
-//                // Tìm đơn hàng theo userId và status (nếu có)
-//                if (status != null && !status.isEmpty()) {
-//                    ordersPage = orderRepository.findByUserIdAndStatus(userId, status, pageable);
-//                } else {
-//                    ordersPage = orderRepository.findByUserId(userId, pageable);
-//                }
-//
-//                // Trả về dữ liệu đơn hàng và thông tin phân trang
-//                PaginatedResponse response = new PaginatedResponse();
-//                response.setOrders(ordersPage.getContent());
-//                response.setPagination(new Pagination(
-//                        page,
-//                        limit,
-//                        ordersPage.getTotalElements(),
-//                        ordersPage.getTotalPages()
-//                ));
-//                return response;
-//            }
-//        }catch (Exception e){
-//            return e.getMessage();
-//        }
-        return null;
+    public Object getUserOrders(String userId, Map<String, Object> filter, String status){
+        try{
+            Query query = new Query(Criteria.where("userId").is(new ObjectId(userId)));
+
+            if (status != null && !status.isEmpty()) {
+                query.addCriteria(Criteria.where("status").is(status));
+            }
+
+            query.skip((long)((int)filter.get("page") - 1) * (int)filter.get("limit"));
+            query.limit((int)filter.get("limit"));
+
+            query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
+
+            List<Order> orders = mongoTemplate.find(query, Order.class);
+
+            Long total = mongoTemplate.count(query, Order.class);
+
+            Map<String,Object> response = new HashMap<>();
+            response.put("orders", orders);
+
+            Map<String,Object> pagination = new HashMap<>();
+
+            pagination.put("page", filter.get("page"));
+            pagination.put("limit", filter.get("limit"));
+            pagination.put("total",total);
+            pagination.put("pages",Math.ceil(total / (int)filter.get("limit")));
+
+            response.put("pagination", pagination);
+            return response;
+        }catch (Exception e){
+            return e.getMessage();
+        }
     }
 
     @Override
@@ -189,6 +202,62 @@ public class OrderService implements IOrderService {
 
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Object updateOrderStatus(String orderId, String status, String notes, String userId) {
+        try{
+            var order = orderRepository.findById(orderId);
+
+            if(!order.isPresent()){
+                throw new Error("Order not found");
+            }
+
+            Query query = new Query();
+            query.addCriteria(Criteria.where("id").is(orderId));
+
+            Update update = new Update();
+            if(status != null){
+                update.set("status", status);
+            }
+
+            if(notes != null){
+                update.set("notes", notes);
+            }
+
+            User user = mongoTemplate.findById(userId, User.class);
+
+            List<StatusHistory> ListStatusHistory = new ArrayList<>();
+            StatusHistory statusHistory = StatusHistory.builder()
+                    .status(status)
+                    .note(notes)
+                    .updatedBy(user)
+                    .build();
+
+            ListStatusHistory.add(statusHistory);
+
+            update.set("statusHistory", ListStatusHistory);
+
+            var result = mongoTemplate.findAndModify(query, update, Order.class);
+            return result;
+        }catch (Exception e){
+            return e.getMessage();
+        }
+    }
+
+    @Override
+    public Object getOrderStatus(String startDate, String endDate) {
+        return null;
+    }
+
+    @Override
+    public Object getOrderById(String orderId) {
+        try{
+            var order = orderRepository.findById(orderId);
+            return order.get();
+        } catch (Exception e) {
+            throw new Error("Error getting order");
         }
     }
 

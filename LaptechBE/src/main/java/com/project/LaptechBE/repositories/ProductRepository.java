@@ -13,4 +13,6 @@ public interface ProductRepository extends MongoRepository<Product, String> {
     public Product findByNameAndBrand(String name, String brand);
     public long countByIsFeatured(boolean isFeatured);
     public List<Product> findByIsFeatured(boolean isFeatured, Sort sort);
+
+    Object findByIdAndNameAndBrand(String id, String name, String brand);
 }

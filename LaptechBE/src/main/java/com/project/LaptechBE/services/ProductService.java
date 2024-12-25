@@ -1,6 +1,7 @@
 package com.project.LaptechBE.services;
 
 import com.project.LaptechBE.DTO.ProductDTO.ProductDTO;
+import com.project.LaptechBE.DTO.ValidationError;
 import com.project.LaptechBE.enums.CategoryEnum;
 import com.project.LaptechBE.enums.SubCategoryEnum;
 import com.project.LaptechBE.models.Product;
@@ -9,7 +10,6 @@ import com.project.LaptechBE.models.submodels.submodelsProduct.ProductReview;
 import com.project.LaptechBE.models.submodels.submodelsProduct.ProductSpecification;
 import com.project.LaptechBE.repositories.ProductRepository;
 import com.project.LaptechBE.services.IServices.IProductService;
-import com.project.LaptechBE.untils.Conveter;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
@@ -17,9 +17,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
-import java.awt.print.Pageable;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -197,6 +198,67 @@ public class ProductService implements IProductService {
             return product;
         }catch (Exception e){
             throw new RuntimeException("Service Error - Get Product: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Object createBulkProducts(List<ProductDTO> productDTOList) {
+        return null;
+    }
+
+    @Override
+    public Object getAllCategory() {
+        return null;
+    }
+
+    @Override
+    public Object deleteProduct(String id) {
+        try{
+            var product = mongoTemplate.findById(id, Product.class);
+            if(product == null) {
+                return "Product not found";
+            }
+            mongoTemplate.remove(product);
+            return true;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Object updateProduct(String id, ProductDTO productDTO) {
+        try{
+            Query query = new Query();
+            query.addCriteria(Criteria.where("id").is(id));
+            var existingProduct = mongoTemplate.findById(id, Product.class);
+            if(existingProduct == null) {
+                return "Product not found";
+            }
+
+            if(!Objects.isNull(productDTO.getName()) || !Objects.isNull(productDTO.getDescription())) {
+                var duplicateProduct = productRepository.findByIdAndNameAndBrand(id,productDTO.getName(),productDTO.getBrand());
+                if(!Objects.isNull(duplicateProduct)) {
+                    return "A product with this name and brand already exists";
+                }
+            }
+            Update update = new Update();
+            Field[] fields = productDTO.getClass().getDeclaredFields();
+
+            for(Field field : fields) {
+                field.setAccessible(true);
+                String fieldName = field.getName();
+                Object fieldValue = field.get(productDTO);
+
+                if(fieldValue != null) {
+                    update.set(fieldName, fieldValue);
+                }
+            }
+
+            var updateProduct = mongoTemplate.findAndModify(query,update,Product.class);
+
+            return updateProduct;
+        } catch (Exception e) {
+            throw new RuntimeException("Service Error - Update Product: " + e.getMessage(), e);
         }
     }
 

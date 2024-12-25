@@ -1,7 +1,10 @@
 package com.project.LaptechBE.controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.LaptechBE.DTO.ApiResponse;
 import com.project.LaptechBE.DTO.OrderDTO.OrderDTO;
+import com.project.LaptechBE.models.Order;
 import com.project.LaptechBE.models.User;
 import com.project.LaptechBE.services.OrderService;
 import com.project.LaptechBE.untils.Endpoints;
@@ -79,45 +82,102 @@ public class OrderController {
         }
     }
 
-//    @GET
-//    public Response getUserOrders(
-//            @QueryParam("page") @DefaultValue("1") int page,
-//            @QueryParam("limit") @DefaultValue("10") int limit
-//    ){
-//        try{
-//
-//            String userId = "";
-//            if(SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User user){
-//                userId = user.getId().toString();
-//            }
-//
-//            Map<String,Object> filter = new HashMap<>();
-//            filter.put("page", page);
-//            filter.put("limit", limit);
-//
-//            var result = orderService.getUserOrders(userId,filter);
-//
-//            return Response.status(Response.Status.OK)
-//                    .entity(
-//                            ApiResponse.builder()
-//                                    .status("OK")
-//                                    .message("SUCCESS")
-//                                    .data(result)
-//                                    .build()
-//                    )
-//                    .build();
-//
-//        } catch (Exception e) {
-//            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-//                    .entity(
-//                            ApiResponse.builder()
-//                                    .status("ERR")
-//                                    .message(e.getMessage())
-//                                    .build()
-//                    )
-//                    .build();
-//        }
-//    }
+    @GET
+    @Path("/my-orders")
+    public Response getUserOrders(
+            @QueryParam("page") @DefaultValue("1") int page,
+            @QueryParam("limit") @DefaultValue("10") int limit,
+            @QueryParam("status") String status
+    ){
+        try{
+
+            String userId = "";
+            if(SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User user){
+                userId = user.getId().toString();
+            }
+
+            Map<String,Object> filter = new HashMap<>();
+            filter.put("page", page);
+            filter.put("limit", limit);
+
+            var result = orderService.getUserOrders(userId,filter,status);
+
+            return Response.status(Response.Status.OK)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("OK")
+                                    .message("SUCCESS")
+                                    .data(result)
+                                    .build()
+                    )
+                    .build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("ERR")
+                                    .message(e.getMessage())
+                                    .build()
+                    )
+                    .build();
+        }
+    }
+
+    @GET
+    @Path("/{orderId}")
+    public Response getOrderById(@PathParam("orderId") String orderId){
+        try{
+            var order = orderService.getOrderById(orderId);
+
+            if(Objects.isNull(order)){
+                return Response.status(404)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("Order not found")
+                                        .build()
+                        ).build();
+            }
+
+            User user = new User();
+            if(SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User USER){
+                user = USER;
+            }
+
+            if(order instanceof Order ORDER){
+                if(ORDER.getUserId().toString() != user.getId().toString() && !user.getIsAdmin()){
+                    return Response.status(403)
+                            .entity(
+                                    ApiResponse.builder()
+                                            .status("ERR")
+                                            .message("You don't have permission to view this order")
+                                            .build()
+                            )
+                            .build();
+                }
+            }
+
+            return Response.status(200)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("OK")
+                                    .message("SUCCESS")
+                                    .data(order)
+                                    .build()
+                    )
+                    .build();
+        } catch (Error e) {
+            return Response.status(500)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("ERR")
+                                    .message(e.getMessage())
+                                    .build()
+                    )
+                    .build();
+        }
+    }
 
     @GET
     public Response getAllOrders(
@@ -128,8 +188,7 @@ public class OrderController {
             @QueryParam("startDate") String startDate,
             @QueryParam("endDate") String endDate,
             @QueryParam("search") String search
-    )
-    {
+    ){
         try{
             Map<String,Object> filter = new HashMap<>();
             filter.put("status", status);
@@ -163,4 +222,62 @@ public class OrderController {
                     .build();
         }
     }
+
+    @GET
+    @Path("/status")
+    public Response getOrderStatus(){
+        return null;
+    }
+
+    @PATCH
+    @Path("{orderId}/status")
+    public Response updateOrderStatus(@PathParam("orderId") String orderId, String requestBody) {
+        try{
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(requestBody);
+
+            String status = jsonNode.has("status") && !jsonNode.get("status").isNull()
+                    ? jsonNode.get("status").asText()
+                    : null;
+            String notes = jsonNode.has("notes") && !jsonNode.get("notes").isNull()
+                    ? jsonNode.get("notes").asText()
+                    : null;
+            if(status == null){
+                return Response.status(400)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("Status is required")
+                                        .build()
+                        )
+                        .build();
+            }
+            String userId = "";
+            if(SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User user){
+                userId = user.getId().toString();
+            }
+
+            var order = orderService.updateOrderStatus(orderId,status,notes, userId);
+
+            return Response.status(200)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("OK")
+                                    .message("ORDER_STATUS_UPDATED")
+                                    .data(order)
+                                    .build()
+                    )
+                    .build();
+        }catch (Exception e){
+            return Response.status(500)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("ERR")
+                                    .message(e.getMessage())
+                                    .build()
+                    ).build();
+        }
+    }
+
+
 }

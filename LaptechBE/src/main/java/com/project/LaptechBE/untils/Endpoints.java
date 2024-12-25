@@ -29,4 +29,8 @@ public class Endpoints {
     public static final class Cart{
         public static final String BASE = "/cart";
     }
+
+    public static final class Review{
+        public static final String BASE = "/review";
+    }
 }

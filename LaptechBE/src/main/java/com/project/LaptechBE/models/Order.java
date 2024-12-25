@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -47,7 +48,9 @@ public class Order {
     private ObjectId id;
     @DBRef(lazy = true)
     private User userId;
-    private List<OrderItem> items;
+
+    @Builder.Default
+    private List<OrderItem> items = new ArrayList<>();
 
     @Builder.Default
     private StatusOrderEnum status = StatusOrderEnum.pending;
@@ -89,8 +92,6 @@ public class Order {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
-
 
 }
 

@@ -3,8 +3,6 @@ package com.project.LaptechBE.controllers;
 import com.project.LaptechBE.DTO.ApiResponse;
 import com.project.LaptechBE.DTO.ProductDTO.ProductDTO;
 import com.project.LaptechBE.DTO.ValidationError;
-import com.project.LaptechBE.models.Product;
-import com.project.LaptechBE.repositories.ProductRepository;
 import com.project.LaptechBE.services.ProductService;
 import com.project.LaptechBE.untils.Endpoints;
 import jakarta.ws.rs.*;
@@ -156,13 +154,32 @@ public class ProductController {
                     .build();
         }
     }
-//
-//    @GET
-//    @Path(Endpoints.Product.GETALLCATEGORY)
-//    public Response getAllCategory() {
-//
-//    }
-//
+
+    @GET
+    @Path(Endpoints.Product.GETALLCATEGORY)
+    public Response getAllCategory() {
+        try{
+            var result = productService.getAllCategory();
+            return Response.status(200)
+                    .entity(
+                        ApiResponse.builder()
+                                .status("OK")
+                                .data(result)
+                                .build()
+                    ).build();
+
+        } catch (Exception e) {
+            return Response.status(500)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("ERR")
+                                    .message("Failed to fetch product")
+                                    .details(e.getMessage())
+                                    .build()
+                    ).build();
+        }
+    }
+
     @GET
     @Path(Endpoints.Product.GETPRODUCTBYID+"{id}")
     public Response getProductById(@PathParam("id") String id) {
@@ -209,16 +226,115 @@ public class ProductController {
                     .build();
         }
     }
-//
-//    @PUT
-//    @Path(Endpoints.Product.UPDATEPRODUCT+"{id}")
-//    public Response updateProduct(@PathParam("id") String id) {
-//
-//    }
+
+    @PUT
+    @Path(Endpoints.Product.UPDATEPRODUCT+"{id}")
+    public Response updateProduct(@PathParam("id") String id,ProductDTO productDTO) {
+        try{
+            if(validateObjectId(id)){
+                return Response.status(400)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("Invalid product ID format")
+                                        .build()
+                        ).build();
+            }
+
+            ValidationError validationError = (ValidationError) validateProductInput(productDTO,true);
+
+            if(validationError != null){
+                return Response.status(400)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message(validationError.getMessage())
+                                        .details(validationError.getDetails())
+                                        .build()
+                        ).build();
+            }
+
+            var result = productService.updateProduct(id,productDTO);
+
+            if(result instanceof String ){
+                return Response.status(400)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message((String) result)
+                                        .build()
+                        )
+                        .build();
+            }
+            return Response.status(200)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("OK")
+                                    .message("Product updated successfully")
+                                    .data(result)
+                                    .build()
+                    ).build();
+        } catch (Exception e) {
+            return Response.status(400)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("ERR")
+                                    .message(e.getMessage())
+                                    .build()
+
+                    )
+                    .build();
+    }
 //
 //    @DELETE
 //    @Path(Endpoints.Product.DELETEPRODUCT+"{id}")
 //    public Response deleteProduct(@PathParam("id") String id) {
 //
 //    }
+    }
+
+    @DELETE
+    @Path("/{id}")
+    public Response deleteProduct(@PathParam("id") String id) {
+        try{
+            if(validateObjectId(id)){
+                return Response.status(400)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message("Invalid product ID format")
+                                        .build()
+                        ).build();
+            }
+
+            var product = productService.deleteProduct(id);
+
+            if(product instanceof String){
+                return Response.status(404)
+                        .entity(
+                                ApiResponse.builder()
+                                        .status("ERR")
+                                        .message(product.toString())
+                                        .build()
+                        ).build();
+            }
+
+            return Response.status(200)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("OK")
+                                    .message("Product deleted successfully")
+                                    .build()
+                    ).build();
+        } catch (Exception e) {
+            return Response.status(500)
+                    .entity(
+                            ApiResponse.builder()
+                                    .status("ERR")
+                                    .message("Failed to fetch product")
+                                    .details(e.getMessage())
+                                    .build()
+                    ).build();
+        }
+    }
 }
