@@ -49,7 +49,22 @@ public class ReviewController {
     @GET
     @Path("/product/{productId}")
     public Response getReviewByProduct(@PathParam("productId") String productId) {
-        return null;
+        try{
+            var result = reviewService.getReviewsByProduct(productId);
+            return Response.status(200)
+                    .entity(
+                            ApiResponse.builder()
+                                    .details(result)
+                                    .build()
+                    ).build();
+        } catch (Exception e) {
+            return Response.status(500)
+                    .entity(
+                            ApiResponse.builder()
+                                    .message(e.getMessage())
+                                    .build()
+                    ).build();
+        }
     }
 
     @GET

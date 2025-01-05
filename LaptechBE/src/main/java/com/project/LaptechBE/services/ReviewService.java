@@ -3,12 +3,17 @@ package com.project.LaptechBE.services;
 import com.project.LaptechBE.DTO.ReviewDTO.ReviewDTO;
 import com.project.LaptechBE.models.Product;
 import com.project.LaptechBE.models.Review;
+import com.project.LaptechBE.models.submodels.submodelsProduct.ProductReview;
 import com.project.LaptechBE.repositories.ProductRepository;
 import com.project.LaptechBE.repositories.ReviewRepository;
 import com.project.LaptechBE.repositories.UserRepository;
 import com.project.LaptechBE.services.IServices.IReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +27,7 @@ public class ReviewService implements IReviewService {
         try{
             var UserOpt = userRepository.findById(userId);
 
-            var ProductOpt = productRepository.findById(reviewDTO.getProductId());
+            var ProductOpt = productRepository.findById(reviewDTO.getProductId().getId().toString());
 
             Review review = Review.builder()
                     .userId(UserOpt.get())
@@ -33,12 +38,27 @@ public class ReviewService implements IReviewService {
 
             reviewRepository.save(review);
 
-            var reviews = reviewRepository.findByProductId(reviewDTO.getProductId());
-            var averageRating = reviews.stream().mapToDouble(
-                    item -> item.getRating()
-            ).average();
+
+            var reviews = reviewRepository.findByProductId(reviewDTO.getProductId().getId().toString());
+
+
+            List<ProductReview> Reviews = new ArrayList<>();
+            Reviews = ProductOpt.get().getReviews();
+            Reviews.add(
+                    ProductReview.builder()
+                            .userId(review.getUserId())
+                            .rating(review.getRating())
+                            .comment(review.getComment())
+                            .build()
+            );
 
             Product product = ProductOpt.get();
+
+            var averageRating = product.getReviews().stream().mapToDouble(
+                    item -> item.getRating().doubleValue()
+            ).average();
+
+            product.setReviews(Reviews);
 
             product.setAverageRating(averageRating.isPresent() ? averageRating.getAsDouble() : 0);
 
@@ -51,7 +71,8 @@ public class ReviewService implements IReviewService {
 
     @Override
     public Object getReviewsByProduct(String productId) {
-        return null;
+        var result = reviewRepository.findByProductId(productId);
+        return result;
     }
 
     @Override

@@ -202,8 +202,66 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public Object createBulkProducts(List<ProductDTO> productDTOList) {
-        return null;
+    public Object createBulkProducts(List<ProductDTO> productDTOs) {
+        try{
+            var createdProducts = productDTOs.stream().map(
+                    item -> {
+                        var existingProduct = productRepository.findByNameAndBrand(item.getName(), item.getBrand());
+
+                        if(existingProduct != null){
+                            return "A product with this name and brand already exists";
+                        }
+
+                        Product product = Product.builder()
+                                .name(item.getName())
+                                .description(item.getDescription())
+                                .category(CategoryEnum.valueOf(item.getCategory().toLowerCase()))
+                                .subCategory(Objects.equals(item.getCategory(),"laptop") ? SubCategoryEnum.fromString(item.getSubCategory()) : null)
+                                .brand(item.getBrand())
+                                .price(item.getPrice())
+                                .stock(item.getStock())
+                                .starting_price(item.getStarting_price())
+                                .images(item.getImages())
+                                .colors(
+                                        Objects.isNull(item.getColors()) ? new ArrayList<>() : item.getColors().stream()
+                                                .map(color -> ProductColor.builder()
+                                                        .id(new ObjectId())
+                                                        .hex(color.getHex())
+                                                        .title(color.getTitle())
+                                                        .build()
+                                                ).collect(Collectors.toList())
+                                )
+                                .specifications(
+                                        Objects.isNull(item.getSpecifications()) ? new ArrayList<>() : item.getSpecifications().stream()
+                                                .map(
+                                                        specification -> ProductSpecification.builder()
+                                                                .id(new ObjectId())
+                                                                .type(specification.getType())
+                                                                .title(specification.getTitle())
+                                                                .description(specification.getDescription())
+                                                                .build()
+                                                ).collect(Collectors.toList())
+                                )
+                                .gift_value(item.getGift_value())
+                                .reviews(
+                                        Objects.isNull(item.getReviews()) ? new ArrayList<>() : item.getReviews().stream()
+                                                .map(
+                                                        review -> ProductReview.builder()
+                                                                .id(new ObjectId())
+                                                                .rating(review.getRating())
+                                                                .comment(review.getComment())
+                                                                .build()
+                                                ).collect(Collectors.toList())
+                                )
+                                .build();
+                        return productRepository.save(product);
+                    }
+            ).collect(Collectors.toList());
+
+            return createdProducts;
+        } catch (Exception e) {
+            return e.getMessage();
+        }
     }
 
     @Override

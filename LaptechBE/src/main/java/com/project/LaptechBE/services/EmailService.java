@@ -19,7 +19,7 @@ public class EmailService {
                 MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
                 // Cấu hình email
-                helper.setFrom("laptech123456@gmail.com"); // Địa chỉ email gửi
+                helper.setFrom("21522185@gm.uit.edu.vn"); // Địa chỉ email gửi
                 helper.setTo(to); // Địa chỉ email nhận
                 helper.setSubject(subject); // Tiêu đề
                 helper.setText(text, html != null); // Nội dung dạng text hoặc HTML

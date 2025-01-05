@@ -223,11 +223,7 @@ public class OrderController {
         }
     }
 
-    @GET
-    @Path("/status")
-    public Response getOrderStatus(){
-        return null;
-    }
+
 
     @PATCH
     @Path("{orderId}/status")
